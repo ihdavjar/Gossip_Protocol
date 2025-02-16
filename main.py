@@ -78,5 +78,3 @@ if __name__ == "__main__":
     adj_matrix = pd.DataFrame()
     adj_matrix.to_csv('adj_matrix.csv')
 
-    # Initialize the peer node list
-    peer_node_list = {}
