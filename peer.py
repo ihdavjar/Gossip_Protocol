@@ -17,7 +17,7 @@ class PeerNode:
         self.seed_nodes = self.register_to_seed()  # Register once
         self.queue = []
         self.peer_data = {}
-
+        self.dead_nodes = []
         self.create_connections()
 
         # Create a persistent listening socket
@@ -153,6 +153,17 @@ class PeerNode:
             print(f"Error handling client {addr} - {e}")
         finally:
             client_sock.close()
+        
+    def ping_port(ip, port):
+        #pings the node at ip and port
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((ip, port))
+            sock.sendall('ping'.encode())
+            msg = sock.recv(1024).decode()
+        
+    def ping_with_delay(self, ip, port):
+        #pings every 13 seconds 
+        threading.Timer(13, self.ping_port, [ip, port]).start()
 
     def generate_messages(self):
 
@@ -190,7 +201,10 @@ class PeerNode:
                 print(f"Error receiving data from {ip}:{port} - {e}")
 
         self.peer_data = dict(pair for dictionary in data_all for pair in dictionary.items())
+    def report_dead_node(self, node_id, port_ip, port_port):
+        return f"Dead Node:<{port_ip}>:<{port_port}>:<{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}>"
 
+    
     def gen_messages(self, delay, num_messages):
         '''
         Generate messages with a specified delay and number of messages.
@@ -207,9 +221,19 @@ class PeerNode:
             time.sleep(delay)
 
 
-    def give_the_status(self, node_id, port_ip, port_port):
-        # If the node is not responding for n pings within a given time print the dead node message
-        return f"Dead Node:<{port_ip}>:<{port_port}>:<{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}>"
+    def check_dead_node(self, node_id, port_ip, port_port):
+        failures={}
+        for peer in self.peer_list:
+            if ping:
+                if node_id not in failures:
+                    failures[node_id] = 1
+                else:
+                    failures[node_id] += 1
+
+        if failures[node_id] >= 3:
+            report_dead_node(node_id, port_ip, port_port)
+
+       
 
     def send_message_to_peer_socket(self, node_id, peer_ip, peer_port, message):
         try:
@@ -218,7 +242,8 @@ class PeerNode:
                 sock.sendall(message.encode())
                 
         except Exception as e:
-            print(self.give_the_status(node_id, peer_ip, peer_port))           
+            time.sleep(13)
+            print(self.report_dead_node(node_id, peer_ip, peer_port))           
 
     def send_message_to_peer(self):
         '''
