@@ -160,7 +160,7 @@ class PeerNode:
 
         # Generate data time etc
         date_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        msgs = ["Vadhi Raj", "Saksham", "Ihdavjar"]
+        msgs = ["Vadhi Raj", "Saksham", "Ihdavjar", "Hello Peer!", "Yo Yo Peer my guy"]
         return f"MSG {self.node_id} {date_time} : {self.ip} : {random.choice(msgs)}"
 
     def get_peer_data(self):
